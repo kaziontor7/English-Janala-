@@ -1,3 +1,26 @@
+const createElement= (arr)=>{
+  const elements = arr.map((el)=> `<span class="btn">${el}</span>` )
+  return elements.join(" ");
+}
+function pronounceWord(word) {
+  const utterance = new SpeechSynthesisUtterance(word);
+  utterance.lang = "en-EN"; // English
+  window.speechSynthesis.speak(utterance);
+}
+
+const load = (value)=>{
+  if(value===true){
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('word-container').classList.add('hidden');
+  }
+  else{
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('word-container').classList.remove('hidden');
+  }
+}
+
+
+
 const getLevels = ()=>{
     fetch('https://openapi.programming-hero.com/api/levels/all')
   .then(res=>res.json())
@@ -13,6 +36,7 @@ const removeCls = () =>{
 
 
   const fetchWords=(vocab)=>{
+    load(true);
     fetch(`https://openapi.programming-hero.com/api/level/${vocab}`)
     .then(res=>res.json())
     .then(word=>{
@@ -20,6 +44,7 @@ const removeCls = () =>{
         const btnLesson = document.getElementById(`lessonBtn-${vocab}`)
         btnLesson.classList.add('bg-[#422AD5]', 'text-white')
         showWords(word.data)})
+        
   }
 
   const fetchWordDetails = async(id)=>{
@@ -49,7 +74,7 @@ const removeCls = () =>{
           </div>
           <div class="">
             <h2 class="font-bold">Synonym</h2>
-            <div class=""></div>
+            <div class="">${createElement(word.synonyms)}</div>
           </div>
     
     `;
@@ -71,11 +96,11 @@ const removeCls = () =>{
      </div>
     
     `
+    load(false)
     return;
   }
 
     word.forEach(elements => {
-        console.log(elements)
         const newE = document.createElement('div');
         newE.innerHTML=`
         <div class="bg-white rounded-xl p-10 text-center h-full ">
@@ -86,7 +111,7 @@ const removeCls = () =>{
         <button onclick="fetchWordDetails(${elements.id})" class="btn text-[#374957] bg-[#1A91FF]/10 p-4 rounded-xl hover:bg-[#1A91FF]/50">
             <i class="fa-solid fa-circle-info"></i>
         </button>
-        <button class="btn text-[#374957] bg-[#1A91FF]/10 p-4 rounded-xl hover:bg-[#1A91FF]/50">
+        <button onclick="(pronounceWord('${elements.word}'))" class="btn text-[#374957] bg-[#1A91FF]/10 p-4 rounded-xl hover:bg-[#1A91FF]/50">
             <i class="fa-solid fa-volume-high"></i>
         </button>
          </div>
@@ -94,6 +119,7 @@ const removeCls = () =>{
         `
         wordContainer.appendChild(newE);
     });
+    load(false);
   }
 
 const displayLessons = (lessons) =>{
@@ -109,6 +135,18 @@ const displayLessons = (lessons) =>{
     })
     
 }
+
+document.getElementById('searchBtn').addEventListener('click',function (){
+  const input =document.getElementById('searchInp').value.trim().toLowerCase()
+  fetch('https://openapi.programming-hero.com/api/words/all')
+  .then(res=>res.json())
+  .then(data=> {
+    const allWord = data.data;
+    const filterWord = allWord.filter(word=>word.word.toLowerCase().includes(input))
+    showWords(filterWord);
+    removeCls()
+  })
+})
 
 getLevels()
  
